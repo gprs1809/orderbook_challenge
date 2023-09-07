@@ -16,7 +16,7 @@ mod proto {
 
 #[derive(Parser)]
 struct Cli {
-    #[clap(short, long, help = "(Optional) Port number of the gRPC server. Default: 50051")]
+    #[clap(short, long, help = "(Optional) Port number of the gRPC server. Default: 8000")]
     port: Option<usize>,
 }
 
