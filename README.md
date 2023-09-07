@@ -28,4 +28,4 @@ The results that a grpc clients would see on their command line would look somet
 
 ![image](https://github.com/gprs1809/orderbook_challenge/assets/79402832/fb9192dc-a335-4113-8fcb-28f1d2f21ae7)
 
-I have to mention that there are several resources online like the Rust lang book, some blogs and some code respositories online that have been incredibly useful for me to complete this challenge. My understanding of the Rust language has also improved several folds with this challenge.
+I have to mention that there are several resources online like the Rust Documentation, Rust lang book, some blogs and some code respositories online that have been incredibly useful for me to complete this challenge. My understanding of the Rust language has also improved several folds with this challenge.
