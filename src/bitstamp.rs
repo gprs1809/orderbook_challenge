@@ -57,6 +57,8 @@ struct OutSubscription {
     channel: String,
 }
 
+//Level struct captures the fields within a single order (Price and Amount). These details along with the exchange name form the Level as described in the protobuf file
+//We need to derive the Clone trait here because this Level is converted to order_collection::Level and so has to be cloned because order_collection:: Level has to be cloned (in order_collection.rs and in grpc_server.rs)
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 struct InData {
     //the order data also has timestamp and microtimestamp (example in testing), but I have ignored them.
@@ -68,11 +70,7 @@ struct InData {
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 struct InSubscription {}
 
-//We need to derive the Clone trait here because in grpc_server.rs, 
-//the watch channel passes data of the type OutputData within it. In book_summary method inside a trait, we are referencing
-//the latest OutputData from the receiving end (using .borrow) and then cloning it to get ownership or the value itself.
-//OutputData struct has fields of the type vec<level> where Level struct is also defined in order_collection
-//We convert the Level here into the Level defined there using ToLevel trait and therefore this Level requires clone since OutputData will be cloned.
+
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 struct Level {
     price: Decimal,

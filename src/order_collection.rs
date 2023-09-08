@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 
-//PartialEq trait is implements (in)equality for the binancedataformat type and considers the NaN cases as well. 
+//PartialEq trait is implements (in)equality for the InputData type and considers the NaN cases as well. 
 //PartialEq is important for assert_eq in testing
 //Debug is required to be derived/implemented because we use the debug marco (debug!) and "{:?}" within debug!
 #[derive(Debug, PartialEq)]
@@ -58,7 +58,7 @@ impl ToString for Exchange {
     }
 }
 
-//Clone is required since OutputData instance is cloned in grpc_server and OutputData has fields of type vec<Level>
+//The reason to derive clone trait is given in detail at the end of the module, just before testing.
 //Debug is trait is to be derived so that debug macro (debug!) can be used and "{:?}" can be used.
 //Eq and PartialEq are required to be derived for implementing the Ord and PartialOrd traits.
 //PartialEq is also required in testing where we use assert_eq!
@@ -81,9 +81,7 @@ impl Level {
 // if it is Ordering::Equal and the Side is Bid, then amount is compared.
 // by default, if self.amount = 30 and other.amount=40, then self.amount.cmp(&other.amount)=Ordering::Less (30 comes before 40)
 // but self.amount.cmp(&other.amount).reverse() will set it to Ordering::Greater which means 40 will come before 30. 
-//the pattern (ord, _) => ord indicates that for unequal prices, asks and bids will get mixed up, but according to how we defined
-// OutputData and InputData, the asks and bids are separate fields of type vec<Level> and we also have an Enum for Side with ask and bids as variants.    
-//This ord and then the partialord implementation sorts levels in ascending order w.r.t price (for both asks and bids). For equal prices,
+//This ord and then the partialord implementation sorts levels in ascending order w.r.t price. For equal prices,
 // levels are sorted w.r.t amounts: ascending order for bids and in descending order for asks. We ultimately want bids to 
 //be arranged from highest price to lowest price and asks to be from lowest price to highest price.
 impl Ord for Level {
@@ -236,7 +234,13 @@ impl Exchanges {
     }
 }
 
-
+//Why is clone implemented for order_collection::Level, Binance::level, Bitstamp::Level, Exchange, Side:
+// Regarding order_collection::Level, here are the reasons for deriving clone trait:
+// 1. In the to_levels trait implementation, we are returning a clone or a deep copy of the output which is of the type vec<Level> 
+// 2. In the to_tick function, we are cloning each vec<Level> and merging the clones.
+// 3. In grpc_server.rs, (OutTickPair is actually defined as (watch::Sender<OutputData>, watch::Receiver<OutputData>)), in the book_summary method, we are using borrow() on the receive end to refer to the OutputData that moves within the watch channel and then we clone() so that we get ownership of a cloned version of the instance of OutputData within the channel, but the OutputData has fields of the type vec<Level> and so order_collection::Level has to have clone derived or implemented. 
+// 4. Since orderbook_collection::Level has to be cloned, the fields within it like Side and Exchange also need to have clone trait implemented/derived.
+// 5. In case of Binance::Level, this Level is converted to order_collection::Level and so has to be cloned because order_collection:: Level has to be cloned
 
 #[cfg(test)]
 mod test {

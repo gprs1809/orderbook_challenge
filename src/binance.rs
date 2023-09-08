@@ -10,7 +10,7 @@ const BINANCE_WS_URL: &str = "wss://stream.binance.com:9443/ws";
 
 //the BinanceDataFormat struct captures the fields in the order details from Binance (like the example used in unit testing below)
 //3 traits (debug, deserialize & PartialEq) have been derived for this struct (with their default implementations). Deserialize trait is from the serde crate. Serde crate helps with serializing rust instances of structs into strings or json (serialize) and vice versa (deserialize)
-//PartialEq trait is implements (in)equality for the binancedataformat type and considers the NaN cases as well. 
+//PartialEq trait implements (in)equality for the binancedataformat type and considers the NaN cases as well. 
 //PartialEq is important for assert_eq in testing
 //Debug is required to be derived/implemented because we use the debug marco (debug!) and "{:?}" within debug!
 #[derive(Debug, Deserialize, PartialEq)]
@@ -22,9 +22,7 @@ struct BinanceDataFormat {
 }
 
 //Level struct captures the fields within a single order (Price and Amount). These details along with the exchange name form the Level as described in the protobuf file
-//We need to derive the Clone trait here because in grpc_servers, the watch channel passes data of the type OutputData within it. In book_summary method inside a trait, we are referencing
-//the latest OutputData from the receiving end (using .borrow) and then cloning it to get ownership or the value itself. OutputData struct has fields of the type vec<level> where Level struct is also defined in order_collection
-//We convert the Level here into the Level defined there using ToLevel trait and therefore this Level requires clone since OutputData will be cloned.
+//We need to derive the Clone trait here because this Level is converted to order_collection::Level and so has to be cloned because order_collection:: Level has to be cloned (in order_collection.rs and in grpc_server.rs)
 #[derive(Debug, Deserialize, PartialEq, Clone)]
 struct Level {
     price: Decimal,
@@ -58,7 +56,7 @@ pub async fn binance_connect(currency_pair: &String) -> Result<websocket::WsStre
 }
 
 //parse function is for parsing message frames from the websocket. 
-//Only text messages are useful and they are deserialized into InTick data type
+//Only text messages are useful and they are deserialized into InputData data type
 //All other messages like Ping, Pong and other message frames are mapped to None
 //Error is a custom error type created in error_handling.rs
 //The ? operator on deserialize(x)?  maps any error into the Error type and if no error, it unwraps the result within Ok
